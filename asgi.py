@@ -1,33 +1,33 @@
-import json
+import os
+from collections import defaultdict
 
+from fastapi import Body
+from fastapi import FastAPI
+from starlette.requests import Request
+from starlette.responses import Response
 
-async def application(scope, receive, send) -> None:
-    if scope["type"] != "http":
-        return
+app = FastAPI()
 
-    path = scope["path"]
+numbers = defaultdict(list)
 
-    await send(
-        {
-            "headers": [
-                [b"content-type", b"application/json"],
-            ],
-            "status": 200,
-            "type": "http.response.start",
-        }
-    )
+def gen_random_name():
+    return os.urandom(16).hex()
 
-    payload = {
-        "hello": "world",
-        "path": path,
-    }
+def get_user(request: Request):
+    return request.cookies.get("user")
 
-    body = json.dumps(payload).encode()
+@app.post("/task/4")
+def handler(
+        request: Request,
+        response: Response,
+        data: str = Body(...),
+):
+    user = get_user(request) or gen_random_name()
+    response.set_cookie("user", user)
 
-    await send(
-        {
-            "body": body,
-            "type": "http.response.body",
-        }
-    )
-
+    if data == "stop":
+        return sum(numbers[user])
+    else:
+        assert data.isdigit()
+        numbers[user].append(int(data))
+        return numbers[user]
