@@ -1,8 +1,11 @@
 import httpx
+import pytest
 
+from asgi import app
 
-def test():
-    url = "http://localhost:8000/task/4"
+@pytest.mark.asyncio
+async def test():
+    url = "/task/4"
 
     with httpx.Client() as client:
         resp = client.post(url, json=1)
